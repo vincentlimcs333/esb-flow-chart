@@ -631,7 +631,7 @@ function setFlowMode(mode) {
   let hideTimer = null;
   let activeTooltip = null;
   const backdrop = document.getElementById('mob-backdrop');
-  const isTouch = window.matchMedia('(hover: none)').matches;
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
   function hideAll() {
     document.querySelectorAll('.tooltip').forEach(function(t) { t.style.display = 'none'; });
@@ -663,7 +663,17 @@ function setFlowMode(mode) {
     if (isTouch) {
       node.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (activeTooltip === tooltip) { hideAll(); } else { showTooltip(tooltip); }
+        if (activeTooltip === tooltip) {
+          hideAll();
+        } else {
+          showTooltip(tooltip);
+          tooltip.style.pointerEvents = 'none';
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              tooltip.style.pointerEvents = '';
+            });
+          });
+        }
       });
       tooltip.addEventListener('click', function(e) { e.stopPropagation(); });
     } else {
