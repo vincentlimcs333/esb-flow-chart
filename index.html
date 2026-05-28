@@ -634,12 +634,10 @@ function setFlowMode(mode) {
 (function() {
   let hideTimer = null;
   let activeTooltip = null;
-  const backdrop = document.getElementById('mob-backdrop');
   const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
   function hideAll() {
     document.querySelectorAll('.tooltip').forEach(function(t) { t.style.display = 'none'; });
-    if (backdrop) backdrop.style.display = 'none';
     activeTooltip = null;
   }
 
@@ -650,7 +648,6 @@ function setFlowMode(mode) {
     }
     tooltip.style.display = 'block';
     activeTooltip = tooltip;
-    if (isTouch && backdrop) backdrop.style.display = 'block';
   }
 
   function scheduleHide(tooltip) {
@@ -688,7 +685,9 @@ function setFlowMode(mode) {
     }
   });
 
-  if (backdrop) backdrop.addEventListener('click', hideAll);
+  document.addEventListener('click', function(e) {
+    if (activeTooltip && !activeTooltip.contains(e.target)) hideAll();
+  });
 })();
 </script>
 
