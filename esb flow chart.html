@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESB Flow Process 2026 · Express & Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#0d0d0d;font-family:'DM Sans',sans-serif;color:#fff;padding:20px 16px;overflow-x:auto;}
+
+/* HEADER */
+.header{text-align:center;margin-bottom:20px;}
+.header h1{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:4px;color:#FFD700;}
+.header p{font-size:0.78rem;color:#666;margin-top:4px;letter-spacing:2px;text-transform:uppercase;}
+
+/* LEGEND */
+.legend{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-bottom:16px;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:0.73rem;font-weight:600;letter-spacing:0.5px;}
+.legend-dot{width:12px;height:12px;border-radius:3px;}
+
+.hint{text-align:center;font-size:0.7rem;color:#444;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+
+/* MODE TOGGLE */
+.mode-toggle{display:flex;justify-content:center;gap:0;margin-bottom:24px;}
+.mode-btn{padding:8px 32px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:2px;cursor:pointer;border:1px solid #2a2a2a;background:#111;color:#555;transition:all 0.15s;outline:none;}
+.mode-btn:first-child{border-radius:6px 0 0 6px;border-right:none;}
+.mode-btn:last-child{border-radius:0 6px 6px 0;}
+.mode-btn.active-express{background:#1e3f6a;color:#93c5fd;border-color:#3b6ea5;}
+.mode-btn.active-studio{background:#3b1f6a;color:#d8b4fe;border-color:#7c3aed;}
+
+/* STUDIO DIFF BADGE on node */
+.studio-diff-badge{display:none;font-size:0.5rem;padding:1px 5px;border-radius:3px;background:#1f0a17;color:#f472b6;border:1px solid #6d1a4a;margin-top:3px;font-weight:700;letter-spacing:0.5px;width:fit-content;}
+body.studio-mode .studio-diff-badge{display:block;}
+
+/* TOOLTIP STUDIO SECTION */
+.tt-studio{display:none;margin-top:6px;padding:5px 7px;background:#150a10;border-radius:4px;border-left:2px solid #f472b6;}
+body.studio-mode .tt-studio{display:block;}
+.tt-studio-label{font-size:0.55rem;color:#f472b6;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:3px;}
+
+/* Inline Express/Studio value overrides */
+.tt-val-express{display:inline;}
+body.studio-mode .tt-val-express{display:none;}
+.tt-val-studio{display:none;}
+body.studio-mode .tt-val-studio{display:inline;}
+
+/* ROLE HEADER */
+.swimlane-wrap{min-width:900px;}
+.role-headers{display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:6px;margin-bottom:6px;}
+.role-header{text-align:center;padding:8px 6px;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;}
+.rh-consultant{background:#1a2535;color:#60a5fa;border:1px solid #2d4a7a;}
+.rh-designer{background:#1f1a2e;color:#c084fc;border:1px solid #5b3a8a;}
+.rh-pm{background:#1a2a1a;color:#4ade80;border:1px solid #2d5a2d;}
+
+/* PHASE ROWS */
+.phase-row{display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:6px;margin-bottom:6px;align-items:start;}
+.phase-label{display:flex;align-items:flex-start;justify-content:center;padding:10px 4px;border-radius:6px;writing-mode:horizontal-tb;font-family:'Bebas Neue',sans-serif;font-size:0.7rem;letter-spacing:1px;text-align:center;line-height:1.3;min-height:60px;hyphens:none;word-break:normal;}
+
+/* PHASE COLORS */
+.ph-presales{background:#12192a;color:#60a5fa;border:1px solid #1e3a5f;}
+.ph-setup{background:#1a1225;color:#a78bfa;border:1px solid #3b1f6a;}
+.ph-pre{background:#0d1f0d;color:#4ade80;border:1px solid #1a4d1a;}
+.ph-construction{background:#1a1205;color:#fbbf24;border:1px solid #5a3a00;}
+.ph-finishing{background:#1a0f05;color:#fb923c;border:1px solid #5a2500;}
+.ph-handover{background:#1a051a;color:#e879f9;border:1px solid #5a155a;}
+.ph-post{background:#1a0505;color:#f87171;border:1px solid #5a1515;}
+
+/* LANE CELLS */
+.lane-cell{display:flex;flex-direction:column;gap:4px;padding:6px;border-radius:6px;border:1px solid #1f1f1f;background:#111;min-height:60px;}
+.lane-empty{background:#0d0d0d;border:1px dashed #1f1f1f;}
+
+/* NODES */
+.node{position:relative;border-radius:5px;padding:7px 9px;cursor:pointer;border:1px solid transparent;transition:transform 0.12s,box-shadow 0.12s;display:flex;flex-direction:column;gap:2px;}
+.node:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.6);z-index:10;}
+.node-num{font-family:'Bebas Neue',sans-serif;font-size:0.85rem;line-height:1;opacity:0.5;}
+.node-name{font-size:0.63rem;font-weight:600;line-height:1.3;text-transform:uppercase;letter-spacing:0.2px;}
+.node-tag{font-size:0.55rem;padding:1px 5px;border-radius:3px;width:fit-content;margin-top:2px;font-weight:700;letter-spacing:0.5px;}
+
+/* NODE ROLE COLORS */
+.n-consultant{background:#101e30;border-color:#1e3f6a;color:#93c5fd;}
+.n-consultant .node-num{color:#3b82f6;}
+.n-designer{background:#16102a;border-color:#3b1f6a;color:#d8b4fe;}
+.n-designer .node-num{color:#a855f7;}
+.n-pm{background:#0d1f0d;border-color:#1a4d1a;color:#86efac;}
+.n-pm .node-num{color:#22c55e;}
+.n-shared{background:#1a1a0d;border-color:#4a4a10;color:#fde68a;}
+.n-shared .node-num{color:#eab308;}
+
+/* Tags */
+.tag-onsite{background:#051a1f;color:#06b6d4;border:1px solid #0e4d6a;}
+.tag-remote{background:#1a1a2e;color:#818cf8;border:1px solid #2d2d6a;}
+.tag-lead{background:#341616;color:#f87171;border:1px solid #6a2d2d;}
+.tag-optional{background:#2a2a10;color:#d4d41a;border:1px solid #5a5a10;}
+
+/* TOOLTIP */
+.tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:#161616;border:1px solid #333;border-radius:8px;padding:10px 12px;min-width:230px;max-width:300px;z-index:1000;box-shadow:0 12px 40px rgba(0,0,0,0.8);pointer-events:auto;}
+.tooltip::after{content:'';position:absolute;top:100%;left:20px;border:5px solid transparent;border-top-color:#333;}
+.tt-title{font-family:'Bebas Neue',sans-serif;font-size:0.95rem;letter-spacing:1px;color:#FFD700;margin-bottom:6px;}
+.tt-sec{margin-bottom:5px;}
+.tt-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:2px;}
+.tt-list{font-size:0.65rem;color:#ccc;line-height:1.5;list-style:none;}
+.tt-list li{padding-left:8px;position:relative;}
+.tt-list li::before{content:'›';position:absolute;left:0;color:#FFD700;}
+
+/* ARROW connector within lane */
+.lane-arrow{text-align:center;color:#333;font-size:0.9rem;line-height:1;padding:1px 0;}
+
+/* HANDOFF indicator */
+.handoff{font-size:0.6rem;color:#FFD700;text-align:center;padding:2px 4px;background:#1a1500;border-radius:3px;border:1px solid #3a3000;margin-top:2px;}
+
+/* DOC LINKS */
+.tt-docs{margin-top:6px;padding-top:5px;border-top:1px solid #2a2a2a;}
+.tt-docs-label{font-size:0.58rem;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:3px;}
+.tt-doc-link{display:block;font-size:0.63rem;color:#60a5fa;text-decoration:none;padding:2px 0 2px 8px;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tt-doc-link::before{content:'📄';position:absolute;left:0;font-size:0.55rem;}
+.tt-doc-link:hover{color:#93c5fd;text-decoration:underline;}
+.tt-note{font-size:0.6rem;color:#aaa;margin-top:4px;font-style:italic;}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  body{padding:14px 10px;}
+  .header h1{font-size:1.9rem;letter-spacing:2px;}
+  .header p{font-size:0.68rem;letter-spacing:1.5px;}
+  .hint{font-size:0.65rem;letter-spacing:1px;margin-bottom:12px;}
+  .legend{gap:10px 14px;margin-bottom:12px;}
+  .legend-item{font-size:0.68rem;}
+
+  /* Hide desktop role header bar — labels appear inline */
+  .role-headers{display:none;}
+
+  /* Unwrap the swimlane constraint */
+  .swimlane-wrap{min-width:0;}
+
+  /* Each phase row becomes a vertical stack */
+  .phase-row{display:flex;flex-direction:column;gap:0;margin-bottom:10px;border-radius:6px;overflow:hidden;}
+
+  /* Phase label spans full width as a header */
+  .phase-label{width:100%;min-height:auto;padding:7px 12px;font-size:0.8rem;letter-spacing:2px;justify-content:flex-start;border-radius:0;border-bottom:none;}
+
+  /* Lane cells stack under the phase label */
+  .lane-cell{border-radius:0;border-top:none;}
+  .lane-cell:last-child{border-radius:0;}
+
+  /* Hide empty lane cells — no point showing blank space */
+  .lane-cell.lane-empty{display:none;}
+
+  /* Role label above each lane cell via ::before */
+  .phase-row > .lane-cell::before{
+    display:block;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:0.7rem;
+    letter-spacing:1.5px;
+    margin-bottom:4px;
+    padding-bottom:3px;
+    border-bottom:1px solid #1f1f1f;
+  }
+  .phase-row > :nth-child(2)::before{content:'Consultant';color:#60a5fa;}
+  .phase-row > :nth-child(3)::before{content:'Designer';color:#c084fc;}
+  .phase-row > :nth-child(4)::before{content:'PM';color:#4ade80;}
+
+  /* Tooltip: fixed bottom sheet on mobile */
+  .tooltip{
+    position:fixed;
+    bottom:12px;
+    left:10px;
+    right:10px;
+    top:auto;
+    max-width:none;
+    min-width:0;
+    border-radius:10px;
+    z-index:9999;
+  }
+  .tooltip::after{display:none;}
+
+  /* Bigger tap targets on nodes */
+  .node{padding:9px 11px;}
+  .node-name{font-size:0.68rem;}
+  .node-num{font-size:0.9rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ESB Flow Chart</h1>
+  <p>The Makeover Guys &middot; 2026</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Consultant</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>Designer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>PM</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#eab308"></div>All Roles / Shared</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;border-radius:50%"></div>On-Site</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#818cf8;border-radius:50%"></div>Remote Monitor</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f472b6;border:2px solid #0d0d0d;outline:1px solid #f472b6;border-radius:2px"></div>Studio Difference</div>
+</div>
+
+<p class="hint">Hover over any node to see details</p>
+
+<!-- MODE TOGGLE -->
+<div class="mode-toggle">
+  <button class="mode-btn active-express" id="btn-express" onclick="setFlowMode('express')">Express</button>
+  <button class="mode-btn" id="btn-studio" onclick="setFlowMode('studio')">Studio</button>
+</div>
+
+<div class="swimlane-wrap">
+
+  <!-- Role Headers -->
+  <div class="role-headers">
+    <div></div>
+    <div class="role-header rh-consultant">Consultant</div>
+    <div class="role-header rh-designer">Designer</div>
+    <div class="role-header rh-pm">PM</div>
+  </div>
+
+  <!-- PRE-SALES -->
+  <div class="phase-row">
+    <div class="phase-label ph-presales">PRE-SALES</div>
+    <div class="lane-cell">
+      <div class="node n-consultant">
+        <div class="node-num">C01</div><div class="node-name">Lead Assignment & Intake</div>
+        <div class="tooltip"><div class="tt-title">Lead Assignment & Intake</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Leads assigned to Consultant from Lisa in ClickUp</li><li>Info, Web CE & floorplan uploaded by Lisa</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Download all provided information</li><li>Contact client within 1 working day</li><li>Set EC appointment with client</li><li>Recap date & time via WhatsApp</li><li>Share address / map / parking instructions</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://app.clickup.com/25607135/v/l/sh/25607135" target="_blank">ClickUp</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C02</div><div class="node-name">Cost Estimation Preparation</div>
+        <div class="tooltip"><div class="tt-title">Cost Estimation Preparation</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Retrieve Web CE</li><li>Do due diligence before meet (esp. rentals)</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Prepare preliminary CE based on gathered info and due diligence</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1oHku7tr37rzt2xWGw_tL425EOl_ecoGHg8q2XOh8-Ig/edit?usp=sharing" target="_blank">Master Price List 2026</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1hgYkzTZUTomo_ALPSvTr5J-n-hKyVi3zlbMhn4tNIkk/edit?usp=sharing" target="_blank">Sales Moodboard Proposal Template</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C03</div><div class="node-name">EC Preparation & Appointment Setup</div>
+        <div class="tooltip"><div class="tt-title">EC Preparation & Appointment Setup</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Floorplan with dimensions</li><li>Web CE</li><li>Cost Estimation</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Print out Web CE, Cost Estimation and Floor Plan</li><li>Get ready with client brief & ESB playbook</li><li>Create folder in Google Drive [All Project Folder] under client name</li><li>Send appointment reminder 1 day before</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RKLnSViunHAuIrIwCGzObEICb94I4ce5?usp=drive_link" target="_blank">All Project Folder 2025/26</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C04</div><div class="node-name">Experience Centre Consultation (ESB Pitch)</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Experience Centre Consultation (ESB Pitch)</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Sales deck, Web CE and all relevant documents ready</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Pre-book Consultation Room</li><li>Arrive 30 min early, ensure EC arranged and ready</li><li>Offer coffee before Consultation</li><li>Present all 3 products: Express / Studio / Bespoke</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1jciWJX9aKi2o1nVFV7wK1Y3eg9RsguKfMm7FuvvsIVU/edit?usp=sharing" target="_blank">Experience Centre Deck</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1c2X7eu6hDzd2KfFjFL_-OIOP_W-NOLei?usp=drive_link" target="_blank">Design Theme Moodboard (PDFs)</a><a class="tt-doc-link" href="https://airtable.com" target="_blank">Theme Catalogue Airtable</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1VPuNWgrM7VqZvzNMWyP3T76m4r2-hUY7?usp=drive_link" target="_blank">PWP Catalogue – Client</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C05</div><div class="node-name">CE Presentation & Booking Confirmation</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">CE Presentation & Booking Confirmation</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Cost Estimation</li><li>Client brief (if any)</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Present CE room by room</li><li>Explain booking fee & 6-step process</li><li>Inform about upcoming site visit → design plan → accurate quotation</li><li>Recap via WhatsApp after meeting</li></ul></div></div>
+      </div>
+    </div>
+    <div class="lane-cell lane-empty"></div>
+    <div class="lane-cell lane-empty"></div>
+  </div>
+
+  <!-- PROJECT SETUP -->
+  <div class="phase-row">
+    <div class="phase-label ph-setup">PROJECT SETUP</div>
+    <div class="lane-cell">
+      <div class="node n-consultant">
+        <div class="node-num">C06</div><div class="node-name">Project Setup – Garage Creation</div>
+        <div class="tooltip"><div class="tt-title">Project Setup – Garage Creation</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Collect client info & property details</li><li>CE & Selected Colour Palette</li><li>Key Collected</li><li>6 Step Selection Journey</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Create project, key in project dates</li><li>Attach keys in Keylog</li><li>Post all info to Garage</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1oraK0GmBmQ1daDxBWJqeg-xJxPMa7KU2pj0hYwXLjEw/edit?usp=sharing" target="_blank">Mogster Garage Guide – Consultants</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C07</div><div class="node-name">Project Assignment & Team Coordination</div>
+        <div class="tooltip"><div class="tt-title">Project Assignment & Team Coordination</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>BUMs to assign team for the lead</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Open internal WA group with designer & PM</li><li>Set appointment for site visit together</li><li>Ensure all project info updated in Garage</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C08</div><div class="node-name">Site Visit Arrangement</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Site Visit Arrangement</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Keys & Cards x 2 sets</li><li>Designer & PM to arrange site visit within 3 working days</li><li>Measuring tools & Floorplan</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Align CE with site conditions, note amendments for quotation</li><li>Conduct on-site discussion to align on client requirements</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C09</div><div class="node-name">Quotation Preparation</div>
+        <div class="tooltip"><div class="tt-title">Quotation Preparation</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Obtain info from site visit</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Prepare quotation in project folder under client name</li><li>Add important remarks or notes</li><li>Save copy as Q1/Q2/Q3 – DO NOT DELETE original</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1oHku7tr37rzt2xWGw_tL425EOl_ecoGHg8q2XOh8-Ig/edit?usp=sharing" target="_blank">Master Price List 2026</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RKLnSViunHAuIrIwCGzObEICb94I4ce5?usp=drive_link" target="_blank">Quotation & All Project Folder</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C10</div><div class="node-name">Quotation + Design Plan Submission</div>
+        <div class="tooltip"><div class="tt-title">Quotation + Design Plan Submission</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Send within 7 working days after site visit</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Ensure quotation version is correct before sending</li><li>Send with summary of changes made</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C11</div><div class="node-name">Follow-Up & Client Engagement</div>
+        <div class="tooltip"><div class="tt-title">Follow-Up & Client Engagement</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Check for client concerns or questions</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Follow up every 3 days</li><li>Set next follow-up date if client not yet ready</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C12</div><div class="node-name">Sales Confirmation & Documentation</div>
+        <div class="tooltip"><div class="tt-title">Sales Confirmation & Documentation</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>LOE Document Merger</li><li>Adobe Sign Account</li><li>Request 50% payment</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Collect client info to prepare LOE</li><li>Combine Final Quotation & LOE via Document Merger</li><li>Log in to Adobe Sign and send for client signature</li><li>Create Finance folder in project drive</li><li>Upload receipt & signed docs to Finance folder</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1BevvX65UcBEjgvSmpHApkmwARrISRIsyMHKikgLxNEA/edit?usp=sharing" target="_blank">LOE Material Merger</a><a class="tt-doc-link" href="https://www.adobe.com/sign" target="_blank">Adobe Sign</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1HCgzCMapCjvuOUvSatfavP7d9XGVlrSZ49GXIZo1400/edit?usp=sharing" target="_blank">Quotation Filing SOP</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C13</div><div class="node-name">Payment and/or Key Collection</div>
+        <div class="tooltip"><div class="tt-title">Payment and/or Key Collection</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>CC Machine (if needed)</li><li>Check Yusri availability if travel needed</li><li>Renovation permit ready</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Set schedule with client for collection</li><li>(i) 50% payment deposited to TMG  (ii) Signed documents</li><li>(iii) Keys & access cards x 2 sets  (iv) Renovation permit approval</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C14</div><div class="node-name">Project Documentation Setup – Garage</div>
+        <div class="tooltip"><div class="tt-title">Project Documentation Setup – Garage</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Final quotation</li><li>Design Plan (Selection Summary)</li><li>Makeover client App onboarding</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Upload: (i) Floor plan  (ii) Final quotation  (iii) Design plan  (iv) Any other relevant info</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C15</div><div class="node-name">Client Communication Setup – WA Group</div>
+        <div class="tooltip"><div class="tt-title">Client Communication Setup – WA Group</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Create Client Groupchat</li><li>Send Greeting & Intro message</li><li>Reconfirm selected colour palette</li><li>Attach project timeline and highlight start date</li><li>Provide MakoverGuys app guide</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://www.themakeover.my/app" target="_blank">MakoverGuys App</a></div></div>
+      </div>
+    </div>
+    <div class="lane-cell lane-empty">
+      <div class="handoff">↓ Receives project assignment from Consultant (C16)</div>
+    </div>
+    <div class="lane-cell lane-empty">
+      <div class="handoff">↓ Receives project assignment from Consultant (C16)</div>
+    </div>
+  </div>
+
+  <!-- PRE-CONSTRUCTION -->
+  <div class="phase-row">
+    <div class="phase-label ph-pre">PRE-CONSTRUCTION</div>
+    <div class="lane-cell lane-empty">
+      <div class="node n-consultant">
+        <div class="node-num">C16</div><div class="node-name">Progress Payments & VO Management</div>
+        <div class="tooltip"><div class="tt-title">Progress Payments & VO Management</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Garage</li><li>CC Machine (if needed)</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Inside Garage click to raise 2nd payment</li><li>Collect payment & upload receipt</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RKLnSViunHAuIrIwCGzObEICb94I4ce5?usp=drive_link" target="_blank">Quotation & All Project Folder</a></div></div>
+      </div>
+    </div>
+
+    <!-- DESIGNER PRE-CONSTRUCTION -->
+    <div class="lane-cell">
+      <div class="node n-designer">
+        <div class="node-num">D01</div><div class="node-name">Project Assign</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Project Assign</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Set site visit date with team (Consultant + Designer + PM go together)</li><li>Within 3 working days after receiving key</li></ul></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Garage project must already be created by Consultant before this step</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D02</div><div class="node-name">Download Info From Garage</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Download Info From Garage</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>CE / <span class="tt-val-express">Selected Colour Palette</span><span class="tt-val-studio">Selected Design Theme</span> / Key Collected</li><li><span class="tt-val-express">Client 6 Step Selection Journey</span><span class="tt-val-studio">Client Lifestyle Gathering (Special Requirements)</span></li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Designer to read through & understand CE</li><li>Double check with SC/DC if anything unclear</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1jciWJX9aKi2o1nVFV7wK1Y3eg9RsguKfMm7FuvvsIVU/edit?usp=sharing" target="_blank">Garage Handbook</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Uses "Selected Design Theme" (not Colour Palette)</li><li>"Client Lifestyle Gathering" replaces "6 Step Selection Journey"</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-shared">
+        <div class="node-num">D03</div><div class="node-name">Site Visit</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Site Visit (Designer)</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Validate scope of work reflected in CE</li><li>Take site measurements for planning stage</li><li>Do any necessary wall marking to site</li><li>Make sure all task update in garage after site visit</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1sfzeBoNbULZBnzqJdHlFB-5axt2XMs_rwn3lKa95YH8/edit?usp=sharing" target="_blank">Designer Site Visit Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1oraK0GmBmQ1daDxBWJqeg-xJxPMa7KU2pj0hYwXLjEw/edit?usp=sharing" target="_blank">Measurement & Ordering SOP</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Bring "Selected Design Theme" (not Colour Palette)</li><li>Also gather Client Lifestyle requirements on-site</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D04</div><div class="node-name">Design Planning Stage (Own Stay)</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Design Planning – Own Stay</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Prepare MoodBoard / Lookbook</li><li>Prepare Layout Planning</li><li>Indicative Wall Design Plan</li><li>Prepare Carpentry 3D (Coohom)</li><li>Furniture & Fittings Selection Summary</li><li>Ready within <span class="tt-val-express">5–7 working days</span><span class="tt-val-studio">7 working days</span></li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1hgYkzTZUTomo_ALPSvTr5J-n-hKyVi3zlbMhn4tNIkk/edit?usp=sharing" target="_blank">Design Plan Template</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1c2X7eu6hDzd2KfFjFL_-OIOP_W-NOLei?usp=drive_link" target="_blank">Moodboard Master Copy</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1sfzeBoNbULZBnzqJdHlFB-5axt2XMs_rwn3lKa95YH8/edit?usp=sharing" target="_blank">Space Planning Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1VPuNWgrM7VqZvzNMWyP3T76m4r2-hUY7?usp=drive_link" target="_blank">Wall Design Handbook</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Design plan must be ready within <strong>7 working days</strong> (not 5)</li></ul></div></div>
+      </div>
+      <div class="node n-designer">
+        <div class="node-num">D05</div><div class="node-name">Technical Drawing Plan (Rental)</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Technical Drawing Plan – Rental</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Prepare Lighting Plan</li><li>Prepare Curtain Plan</li><li>Detailed Carpentry Plan</li><li>Misc. Installation Plan</li><li>Prepare orders list in Garage (DO NOT place orders until client sign off)</li><li>Ready within <span class="tt-val-express">5 working days</span><span class="tt-val-studio">10 working days</span></li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1hgYkzTZUTomo_ALPSvTr5J-n-hKyVi3zlbMhn4tNIkk/edit?usp=sharing" target="_blank">Design Plan Template</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1T922sZP0ehraFJWcJb5aA_IZKFM1O9lPUsT26RUyqmw/edit?usp=drive_link" target="_blank">Lighting & Fan Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1tuebqcAuirzUJXVqr3mj9q0W6ce1IixQ?usp=drive_link" target="_blank">Curtain & Blind Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1c2X7eu6hDzd2KfFjFL_-OIOP_W-NOLei?usp=drive_link" target="_blank">Designer Carpentry Handbook</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Design plan + technical drawings ready within <strong>10 working days</strong> (not 5)</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D06–08</div><div class="node-name">Client Feedback → Sign Off → Set Start Date (Own Stay)</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Own Stay: Review Cycle</div><div class="tt-sec"><div class="tt-label">D06 – Client Feedback & Revision</div><ul class="tt-list"><li>Incorporate client feedback into design</li><li>Revise drawings as required</li><li>Revise design plan within <span class="tt-val-express">2 working days</span><span class="tt-val-studio">2 working days / 5 days if major revision</span></li></ul></div><div class="tt-sec"><div class="tt-label">D07 – Client Sign Off</div><ul class="tt-list"><li>Obtain client sign off on design planning deck</li></ul></div><div class="tt-sec"><div class="tt-label">D08 – Set Project Start Date</div><ul class="tt-list"><li>Confirm and set project start date with team</li></ul></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Major revisions allowed up to 5 working days</li><li>3D revision: maximum 3 rounds if required</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D09</div><div class="node-name">Design Ordering</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Design Ordering</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Order all items as per design scope</li><li>Confirm delivery dates with PM</li><li>Place order <span class="tt-val-express">same day as project start date</span><span class="tt-val-studio">within 2 working days of project start date</span></li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1jciWJX9aKi2o1nVFV7wK1Y3eg9RsguKfMm7FuvvsIVU/edit?usp=sharing" target="_blank">Garage Ordering Handbook</a><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1oHku7tr37rzt2xWGw_tL425EOl_ecoGHg8q2XOh8-Ig/edit?usp=sharing" target="_blank">Master Vendor List</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Orders placed within <strong>2 working days</strong> of start date (Express: same day)</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D10–11</div><div class="node-name">Schedule Planning + Vendor Booking</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Schedule Planning & Vendor Booking</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Align on project schedule with PM and team</li><li>Confirm vendor availability and book schedule with PM</li><li>Book all vendor items as per design scope</li><li><span class="tt-val-studio">Confirm schedule with PM for vendor briefing 2 working days in advance</span></li></ul></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Vendor briefing schedule confirmation: <strong>2 working days</strong> in advance</li></ul></div></div>
+      </div>
+    </div>
+
+    <!-- PM PRE-CONSTRUCTION -->
+    <div class="lane-cell">
+      <div class="node n-pm">
+        <div class="node-num">P01</div><div class="node-name">Key Collection</div>
+        <div class="tooltip"><div class="tt-title">Key Collection</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Key & access card location</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Set site visit date with team within 3 working days</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1saicdpkujp5uKJtPtzeFPwmP7e7gFVRPsMzz-eVeHaQ/edit?usp=sharing" target="_blank">Garage Keylog</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P02</div><div class="node-name">Download Info From Garage</div>
+        <div class="tooltip"><div class="tt-title">Download Info From Garage</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Garage is the main channel for progress updates</li><li>Upload all information within 3 working days</li><li>Make sure all tasks updated after site visit</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1jciWJX9aKi2o1nVFV7wK1Y3eg9RsguKfMm7FuvvsIVU/edit?usp=sharing" target="_blank">Garage Orders Module</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-shared">
+        <div class="node-num">P03</div><div class="node-name">Site Visit</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Site Visit (PM)</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Visit management office</li><li>Within 3 working days after project assign</li><li>Follow Site Visit Handbook</li><li>Area with build-in must take measurement</li><li>Site measurement for items required by PM</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RKLnSViunHAuIrIwCGzObEICb94I4ce5?usp=drive_link" target="_blank">Unit Defect Checklist</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1sfzeBoNbULZBnzqJdHlFB-5axt2XMs_rwn3lKa95YH8/edit?usp=sharing" target="_blank">Site Visit Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1oraK0GmBmQ1daDxBWJqeg-xJxPMa7KU2pj0hYwXLjEw/edit?usp=sharing" target="_blank">Measurement & Ordering SOP</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P04</div><div class="node-name">Design Planning Stage (Support)</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Design Planning Stage – PM Support</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Support on quotation if designer needs</li><li><span class="tt-val-studio">Client lifestyle gathering information</span></li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Design Plan must be ready <span class="tt-val-express">5 working days</span><span class="tt-val-studio">5 working days (Own Stay) / 10 working days (Rental)</span> after site visit</li><li>Prelim schedule ready within <span class="tt-val-express">1 working day</span><span class="tt-val-studio">2 working days</span> after site visit</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1hgYkzTZUTomo_ALPSvTr5J-n-hKyVi3zlbMhn4tNIkk/edit?usp=sharing" target="_blank">Design Plan Template</a><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1p2X7PikH6IvCEd7pwanXiak9CPPBXcfnDcHBhcC_TJE/edit?usp=sharing" target="_blank">Design Plan SOP</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Prelim schedule within <strong>2 working days</strong> (Express: 1)</li><li>Add "Client Lifestyle Gathering" as project requirement</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P05</div><div class="node-name">Permit Application</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Permit Application</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Start to apply once after site visit</li><li>Send copy to all vendors + stick on door + upload to garage</li><li>If need to extend renovation period get BUMs approval</li><li><span class="tt-val-studio">Obtain all special documents required by MO/Government (e.g. PW4/MBPJ submission)</span></li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1sfzeBoNbULZBnzqJdHlFB-5axt2XMs_rwn3lKa95YH8/edit?usp=sharing" target="_blank">Site Visit Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/135R2nge9U3FqDaiyki3-VTGwrieZCDTl?usp=drive_link" target="_blank">Worker List</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Additional: obtain special docs from MO & Government dept (e.g. PW4/MBPJ submission)</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P06</div><div class="node-name">Schedule Planning</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Schedule Planning</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Client sign off design plan</li><li>MO defects rectification done</li><li>Renovation Permit approval</li><li>Downpayment collected</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Update schedule in garage within 1 working day after permit approve</li><li>Reschedule Garage Task per latest quotation & Design Plan</li><li><span class="tt-val-studio">Ensure all documents ready (example: PW4/MBPJ submission)</span></li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1HCgzCMapCjvuOUvSatfavP7d9XGVlrSZ49GXIZo1400/edit?usp=sharing" target="_blank">Ordering & Scheduling Guide</a><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1w5pB88MFakbky4lTPzvRDzx-oFcocaw2ABofpmXlGPs/edit?usp=sharing" target="_blank">Express QC Checklist</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Verify all MO/Govt documents ready (PW4/MBPJ) before scheduling</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P07</div><div class="node-name">Booking / Ordering</div>
+        <div class="tooltip"><div class="tt-title">Booking / Ordering</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Book vendor schedule within 1 working day after permit approve</li><li>Book vendor schedule with respective format</li><li>Confirm delivery date with supplier</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1HCgzCMapCjvuOUvSatfavP7d9XGVlrSZ49GXIZo1400/edit?usp=sharing" target="_blank">Ordering & Scheduling Guide</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1jciWJX9aKi2o1nVFV7wK1Y3eg9RsguKfMm7FuvvsIVU/edit?usp=sharing" target="_blank">Garage Order Module</a><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1oHku7tr37rzt2xWGw_tL425EOl_ecoGHg8q2XOh8-Ig/edit?usp=sharing" target="_blank">Master Vendor List</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSTRUCTION -->
+  <div class="phase-row">
+    <div class="phase-label ph-construction">CONSTRUCTION</div>
+    <div class="lane-cell lane-empty"></div>
+
+    <!-- DESIGNER CONSTRUCTION -->
+    <div class="lane-cell">
+      <div class="node n-designer">
+        <div class="node-num">D12</div><div class="node-name">Pre-Cleaning / Floor Protection</div><div class="node-tag tag-remote">REMOTE</div>
+        <div class="tooltip"><div class="tt-title">Pre-Cleaning / Floor Protection</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Monitor floor protection is in place before works begin</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D13</div><div class="node-name">1st Stage Delivery</div><div class="node-tag tag-remote">REMOTE</div>
+        <div class="tooltip"><div class="tt-title">1st Stage Delivery</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Ensure all deliverables for 1st stage ordered & delivery date set</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D14</div><div class="node-name">Lighting & Fan Installation</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Lighting & Fan Installation</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Lighting plan & detailed drawings ready</li><li>Lighting & fan delivery completed</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Ensure lighting installation is as per drawings</li><li>Arrange/set designer lights with installer</li><li>PM to get confirmation date for installation from designer</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D15–18</div><div class="node-name">Aircon / Plumbing / Coring / Plastering</div><div class="node-tag tag-remote">REMOTE</div>
+        <div class="tooltip"><div class="tt-title">Aircon / Plumbing / Coring / Plastering (Monitor)</div><div class="tt-sec"><div class="tt-label">SOP (all)</div><ul class="tt-list"><li>Monitor to ensure installation is done as per designer's instruction</li><li>Check WA group chat (installer to TAG designer)</li><li>Plastering includes: plaster ceiling / partition / aircon boxup / aircon u-box / kitchen boxup / curtain pelmet / light trough</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D19–25</div><div class="node-name">2nd Lighting / Wall Design / Flooring / Carpentry / Kitchen / Handyman</div><div class="node-tag tag-remote">REMOTE</div>
+        <div class="tooltip"><div class="tt-title">Construction Monitoring (D19–D25)</div><div class="tt-sec"><div class="tt-label">SOP (all)</div><ul class="tt-list"><li>Monitor to ensure installation as per designer's instruction</li><li>Check WA group chat (installer to TAG designer)</li><li>D22 Flooring: Designer to select colour code & indicate installation area</li><li>Flooring to be ordered by PM along with booking installer</li></ul></div></div>
+      </div>
+    </div>
+
+    <!-- PM CONSTRUCTION -->
+    <div class="lane-cell">
+      <div class="node n-pm">
+        <div class="node-num">P08</div><div class="node-name">Contractor Work (Wet Work)</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Contractor Work</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>All documentation/approval requested</li><li>Material/tools ready at site</li><li>Roro bin for rubbish disposal</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Present at site for vendor briefing</li><li>QC after work done (follow up daily)</li><li>One round cleaning before canvassing</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P09</div><div class="node-name">Pre-cleaning / Floor Protection</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Pre-cleaning / Floor Protection</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Ensure all floor covered (except yard/balcony/toilets)</li><li>Tiles: canvas | Wooden/Stone: canvas + floor guard sheet</li><li>Main entrance curb tile edging: hard cardboard</li><li>Ensure all existing items covered (aircons, cabinetry etc)</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1BevvX65UcBEjgvSmpHApkmwARrISRIsyMHKikgLxNEA/edit?usp=sharing" target="_blank">Floor Protection Handbook</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P10</div><div class="node-name">1st Stage Delivery</div>
+        <div class="tooltip"><div class="tt-title">1st Stage Delivery</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>QC (qualities & quantities) within 1 working day (OTIF)</li><li>Sign back DO</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1jciWJX9aKi2o1nVFV7wK1Y3eg9RsguKfMm7FuvvsIVU/edit?usp=sharing" target="_blank">Garage Ordering Module</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P11–12</div><div class="node-name">Lighting Installation + Aircon / Water Heater</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Lighting + Aircon / Water Heater</div><div class="tt-sec"><div class="tt-label">Lighting SOP</div><ul class="tt-list"><li>Present at site for vendor briefing</li><li>Place light fitting on floor based on lighting plan</li><li>QC within 2 days after completion</li></ul></div><div class="tt-sec"><div class="tt-label">Aircon SOP</div><ul class="tt-list"><li>PM to order and arrange installation with supplier</li><li>Protection on aircon after installation</li><li>QC within 2 days after completion</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1T922sZP0ehraFJWcJb5aA_IZKFM1O9lPUsT26RUyqmw/edit?usp=drive_link" target="_blank">Lighting & Fan Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1cIfebsqCGBEDrtL08on2zvpf2OmRfOkCBi3Gpe7Dr2w/edit?usp=drive_link" target="_blank">Aircon Handbook</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P13–16</div><div class="node-name">Plumbing / Coring / Plastering / 2nd Lighting</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Plumbing / Coring / Plastering / 2nd Lighting</div><div class="tt-sec"><div class="tt-label">SOP (all)</div><ul class="tt-list"><li>Present at site for vendor briefing</li><li>QC after work done (same day for Coring, within 1–2 days for others)</li><li>Ensure tidiness & cleanliness of unit</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1X4smOhunqqXHmOd3uMpqTxVT4xLSDg80cNBAzkFAcU8/edit?usp=drive_link" target="_blank">Plumbing Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1vwhjbzYdLhdTUvkVw1Y-4UXAoN5WLmSpyfpoM2AluTg/edit?usp=drive_link" target="_blank">Plaster Ceiling Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1T922sZP0ehraFJWcJb5aA_IZKFM1O9lPUsT26RUyqmw/edit?usp=drive_link" target="_blank">Lighting & Fan Handbook</a></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>P16 (2nd Lighting): PM monitors <strong>remotely</strong> in Studio (Express: on-site required)</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P17–24</div><div class="node-name">Measurement / 2nd Delivery / Wall Design / Flooring / Carpentry / Kitchen / Handyman</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">P17–P24: Construction Stages</div><div class="tt-sec"><div class="tt-label">SOP (all)</div><ul class="tt-list"><li>Present at site for vendor briefing</li><li>QC after work done (2–5 days depending on stage)</li><li>Ensure tidiness & cleanliness of unit</li><li>P17 All Measurement: ensure all carpentry items ready at site/factory</li><li>P21 Carpentry: QC within 5 days, arrange kitchen top measurement</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1sfzeBoNbULZBnzqJdHlFB-5axt2XMs_rwn3lKa95YH8/edit?usp=sharing" target="_blank">Site Visit Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1oraK0GmBmQ1daDxBWJqeg-xJxPMa7KU2pj0hYwXLjEw/edit?usp=sharing" target="_blank">Measurement & Ordering SOP</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1c2X7eu6hDzd2KfFjFL_-OIOP_W-NOLei?usp=drive_link" target="_blank">Carpentry Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1VPuNWgrM7VqZvzNMWyP3T76m4r2-hUY7?usp=drive_link" target="_blank">Wall Design Handbook</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/103J6EpvOhrDoeMqvmQCzyNNOH9WxgFjeiR-ddWzdxd0/edit?usp=sharing" target="_blank">Handyman Handbook</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINISHING -->
+  <div class="phase-row">
+    <div class="phase-label ph-finishing">FINISHING</div>
+    <div class="lane-cell lane-empty">
+      <div class="node n-consultant">
+        <div class="node-num">C17</div><div class="node-name">Final Payment Processing</div>
+        <div class="tooltip"><div class="tt-title">Final Payment Processing</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Garage</li><li>Quotation in PDF & Excel format</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Click Final Invoice in Garage before Handover</li><li>Collect payment & upload receipt</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RKLnSViunHAuIrIwCGzObEICb94I4ce5?usp=drive_link" target="_blank">Quotation & All Project Folder</a></div></div>
+      </div>
+    </div>
+
+    <!-- DESIGNER FINISHING -->
+    <div class="lane-cell">
+      <div class="node n-designer">
+        <div class="node-num">D26–29</div><div class="node-name">Touch Up / Post Cleaning / Curtain / 3rd Delivery</div><div class="node-tag tag-remote">REMOTE</div>
+        <div class="tooltip"><div class="tt-title">Finishing – Monitor Stages</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Monitor touch up works and post cleaning</li><li>Monitor curtain & blind installation (ensure per drawings)</li><li>Ensure all deliverables for 3rd stage ordered & delivery set by PM</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D30</div><div class="node-name">Basic Cleaning</div>
+        <div class="tooltip"><div class="tt-title">Basic Cleaning</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Set cleaning 3 days before handover</li><li>Do not set same day as final deco</li><li>If basic cleaning done more than 1 week before handover – inform client</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-designer">
+        <div class="node-num">D31</div><div class="node-name">Final QC, Deco/Styling & Final Photography</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Final QC, Deco/Styling & Photography</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Keys / Decorations & Soft Touches delivered / Final Cleaning done</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Go through unit & identify all defects</li><li>Report all defects to PM & Garage within 24 hours</li><li>Do final Decoration & Professional Photography</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1Kswip4DMDrYMaWjkeHtJxTWBIAn2y6uXDsHXTNgT7UI/edit?usp=sharing" target="_blank">Designer QC Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/19MLNmPOVS5-Uapi7gWLm2rBBHWWZeLTZ?usp=drive_link" target="_blank">Final Deco & Styling Handbook</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1FWYjUfntpjRI2C-M9NuNyOB4yTsLFnM-?usp=drive_link" target="_blank">Photography & Photo Editing Handbook</a></div></div>
+      </div>
+    </div>
+
+    <!-- PM FINISHING -->
+    <div class="lane-cell">
+      <div class="node n-pm">
+        <div class="node-num">P25</div><div class="node-name">Touch Up Works</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Touch Up Works</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Present at site for vendor briefing</li><li>QC after work done (within 2 days)</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1Kswip4DMDrYMaWjkeHtJxTWBIAn2y6uXDsHXTNgT7UI/edit?usp=sharing" target="_blank">QC Handbook</a><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1w5pB88MFakbky4lTPzvRDzx-oFcocaw2ABofpmXlGPs/edit?usp=sharing" target="_blank">QC Checklist</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P26–28</div><div class="node-name">Post Cleaning / Curtain / 3rd Delivery</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Post Cleaning / Curtain & Blind / 3rd Delivery</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Post Cleaning: QC within 2 days</li><li>Curtain & Blind: QC within 5 days</li><li>3rd Delivery: QC qualities & quantities within 24 hrs, sign back DO</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1tuebqcAuirzUJXVqr3mj9q0W6ce1IixQ?usp=drive_link" target="_blank">Curtain & Blind Handbook</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P29</div><div class="node-name">Final QC</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Final QC</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Detailed spot check everything provided per quotation</li><li>Touch up minor defects by own</li><li>Arrange vendor rectification within 3 working days</li><li>Ensure project OTIF</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://docs.google.com/spreadsheets/d/1w5pB88MFakbky4lTPzvRDzx-oFcocaw2ABofpmXlGPs/edit?usp=sharing" target="_blank">Express QC Checklist</a><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RbBI1KLeaWQDuWhpXIbEHzC9PbolyRe_?usp=drive_link" target="_blank">Defect Rectification Handbook</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P30–31</div><div class="node-name">Basic Cleaning + Deco / Shooting</div>
+        <div class="tooltip"><div class="tt-title">Basic Cleaning & Deco/Shooting</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Basic Cleaning: QC within 2 days, clean canvas between entrance & lift</li><li>Do NOT do same day as final deco & shooting</li><li>Deco/Shooting: morning session, edited photo ready 3 days before handover</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/19MLNmPOVS5-Uapi7gWLm2rBBHWWZeLTZ?usp=drive_link" target="_blank">Final Deco Guide</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HANDOVER -->
+  <div class="phase-row">
+    <div class="phase-label ph-handover">HANDOVER</div>
+    <div class="lane-cell">
+      <div class="node n-consultant">
+        <div class="node-num">C18–19</div><div class="node-name">Handover Preparation + Project Handover</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Handover Preparation + Project Handover</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Handover Kit</li><li>Set Handover date with client</li><li>Handover List</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Prepare Handover Kit & print Handover List</li><li>PM or Designer to conduct final QC</li><li>Arrive 1 hour early to cross-check all details</li><li>Go through handover list with client</li><li>Explain Handover Kit contents – Selfie with client</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1FWYjUfntpjRI2C-M9NuNyOB4yTsLFnM-?usp=drive_link" target="_blank">Warranty Registration & Handover Notice</a><a class="tt-doc-link" href="https://docs.google.com/presentation/d/1Kswip4DMDrYMaWjkeHtJxTWBIAn2y6uXDsHXTNgT7UI/edit?usp=sharing" target="_blank">Handover Process Handbook</a></div><div class="tt-note">Own Stay: full team. Rental: consultant only</div></div>
+      </div>
+    </div>
+    <div class="lane-cell">
+      <div class="node n-designer">
+        <div class="node-num">D32</div>
+        <div class="node-name">Handover</div>
+        <div class="node-tag tt-val-express tag-optional">OPTIONAL</div>
+        <div class="node-tag tt-val-studio tag-onsite">ON-SITE</div>
+        <div class="studio-diff-badge">STUDIO</div>
+        <div class="tooltip"><div class="tt-title">Handover (Designer)</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li><span class="tt-val-express">Not required for rental projects</span><span class="tt-val-studio">Required to join for all project types</span></li><li><span class="tt-val-express">Own Stay: required to join if convenient</span><span class="tt-val-studio">Own Stay: required to join</span></li><li>Always better to join for better NPS</li><li>Own Stay checklist: selfie / team review / smart lock transfer / return key set</li></ul></div><div class="tt-studio"><div class="tt-studio-label">Studio Differences</div><ul class="tt-list"><li>Designer is <strong>required on-site</strong> for all handovers (Express: optional for own stay, not required for rental)</li></ul></div></div>
+      </div>
+    </div>
+    <div class="lane-cell">
+      <div class="node n-shared">
+        <div class="node-num">P32</div><div class="node-name">Handover</div><div class="node-tag tag-onsite">ON-SITE</div>
+        <div class="tooltip"><div class="tt-title">Handover (PM)</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Consolidated Project Quotation clearance with client</li><li>Handover list / Warranty / Handover care</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Consultant + Designer + PM join together</li><li>Selfie & team review</li><li>Smart lock ownership transfer</li><li>Return key set with access card</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1FWYjUfntpjRI2C-M9NuNyOB4yTsLFnM-?usp=drive_link" target="_blank">Handover Process Handbook</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST HANDOVER -->
+  <div class="phase-row">
+    <div class="phase-label ph-post">POST-HANDOVER</div>
+    <div class="lane-cell">
+      <div class="node n-consultant">
+        <div class="node-num">C20</div><div class="node-name">Thank You & Review Request</div>
+        <div class="tooltip"><div class="tt-title">Thank You & Review Request</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Send thank you message</li><li>Send Google review link</li><li>Send Facebook review link</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://share.google/V0ak37qQyfO7VXztx" target="_blank">Google Review</a><a class="tt-doc-link" href="https://www.facebook.com/themakeover.my/reviews" target="_blank">Facebook Review</a></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C21</div><div class="node-name">Project Closure – Garage Completion</div>
+        <div class="tooltip"><div class="tt-title">Project Closure – Garage Completion</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Garage</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Complete all tasks in Garage</li><li>Rental: drop key to CozyHomes drawer</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C22</div><div class="node-name">Warranty & Final Payment Follow-Up</div>
+        <div class="tooltip"><div class="tt-title">Warranty & Final Payment Follow-Up</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Regularly monitor garage due date</li><li>Follow up on final payment 1 week after invoice issued</li><li>Remind client about additional warranty coverage</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-consultant">
+        <div class="node-num">C23</div><div class="node-name">Defect Rectification & Maintenance Support</div>
+        <div class="tooltip"><div class="tt-title">Defect Rectification & Maintenance Support</div><div class="tt-sec"><div class="tt-label">Requirements</div><ul class="tt-list"><li>Acknowledge client defect feedback within defect liability period (within a month)</li></ul></div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Work with PM to handle defect rectification within 30 working days</li><li>After 30 working days – handled by Maintenance Team</li><li>Inform client: Maintenance Team contacts within 1–2 days after defect submission</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://www.themakeover.my/warranty-maintenance" target="_blank">Maintenance Link</a></div></div>
+      </div>
+    </div>
+    <div class="lane-cell">
+      <div class="node n-designer">
+        <div class="node-num">D33</div><div class="node-name">Edited Photos</div>
+        <div class="tooltip"><div class="tt-title">Edited Photos</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Edit unit photos & upload to NAS Drive (link to Garage)</li><li>Complete within 5 working days after Final Deco</li><li>Take extra photos for any special design or new items</li><li>(Design / Inventory / System: Blum/Salice/Elamax/Ecoware)</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1FWYjUfntpjRI2C-M9NuNyOB4yTsLFnM-?usp=drive_link" target="_blank">Photography & Photo Editing Handbook</a></div></div>
+      </div>
+    </div>
+    <div class="lane-cell">
+      <div class="node n-pm">
+        <div class="node-num">P33</div><div class="node-name">Vendor List Updated</div>
+        <div class="tooltip"><div class="tt-title">Vendor List Updated</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Update full vendor list into garage for future maintenance team</li><li>Update within 7 working days</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P34</div><div class="node-name">Payment Collection</div>
+        <div class="tooltip"><div class="tt-title">Payment Collection</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Collect payment within 7 working days after project handover</li></ul></div></div>
+      </div>
+      <div class="lane-arrow">↓</div>
+      <div class="node n-pm">
+        <div class="node-num">P35</div><div class="node-name">Defect Rectification</div>
+        <div class="tooltip"><div class="tt-title">Defect Rectification</div><div class="tt-sec"><div class="tt-label">SOP</div><ul class="tt-list"><li>Provide schedule within 3 working days to update client</li><li>Rectify defects within 5 working days (more: get BUMs advice)</li><li>Team responsibility within 30 working days (then – maintenance team)</li></ul></div><div class="tt-docs"><div class="tt-docs-label">Documents</div><a class="tt-doc-link" href="https://drive.google.com/drive/folders/1RbBI1KLeaWQDuWhpXIbEHzC9PbolyRe_?usp=drive_link" target="_blank">Defect Rectification Handbook</a></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end swimlane-wrap -->
+
+<div style="text-align:center;margin-top:24px;font-size:0.68rem;color:#444;letter-spacing:1px;">
+  THE MAKEOVER GUYS &middot; ESB FLOW PROCESS 2026 &middot; HOVER NODES FOR DETAILS
+</div>
+
+<script>
+function setFlowMode(mode) {
+  document.body.classList.toggle('studio-mode', mode === 'studio');
+  document.getElementById('btn-express').classList.toggle('active-express', mode === 'express');
+  document.getElementById('btn-studio').classList.toggle('active-studio', mode === 'studio');
+}
+
+(function() {
+  let hideTimer = null;
+  let activeTooltip = null;
+
+  function hideAll() {
+    document.querySelectorAll('.tooltip').forEach(function(t) {
+      t.style.display = 'none';
+    });
+    activeTooltip = null;
+  }
+
+  function showTooltip(tooltip) {
+    clearTimeout(hideTimer);
+    if (activeTooltip && activeTooltip !== tooltip) {
+      activeTooltip.style.display = 'none';
+    }
+    tooltip.style.display = 'block';
+    activeTooltip = tooltip;
+  }
+
+  function scheduleHide(tooltip) {
+    hideTimer = setTimeout(function() {
+      tooltip.style.display = 'none';
+      if (activeTooltip === tooltip) activeTooltip = null;
+    }, 300);
+  }
+
+  const isTouch = window.matchMedia('(hover: none)').matches;
+
+  document.querySelectorAll('.node').forEach(function(node) {
+    const tooltip = node.querySelector('.tooltip');
+    if (!tooltip) return;
+
+    if (isTouch) {
+      node.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (activeTooltip === tooltip) {
+          hideAll();
+        } else {
+          showTooltip(tooltip);
+        }
+      });
+    } else {
+      node.addEventListener('mouseenter', function() { showTooltip(tooltip); });
+      node.addEventListener('mouseleave', function() { scheduleHide(tooltip); });
+      tooltip.addEventListener('mouseenter', function() { showTooltip(tooltip); });
+      tooltip.addEventListener('mouseleave', function() { scheduleHide(tooltip); });
+    }
+  });
+
+  if (isTouch) {
+    document.addEventListener('click', function() { hideAll(); });
+  }
+})();
+</script>
+
+</body>
+</html>
