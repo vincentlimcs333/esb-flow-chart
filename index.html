@@ -179,6 +179,10 @@ body.studio-mode .tt-val-studio{display:inline;}
   .node{padding:9px 11px;}
   .node-name{font-size:0.68rem;}
   .node-num{font-size:0.9rem;}
+
+  /* Remove transform on tap — transform on an ancestor breaks position:fixed,
+     causing the tooltip to be clipped by the phase row's overflow:hidden */
+  .node:hover{transform:none;box-shadow:none;}
 }
 
 /* Backdrop overlay for mobile modal */
