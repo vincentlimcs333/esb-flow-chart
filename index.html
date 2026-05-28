@@ -158,16 +158,19 @@ body.studio-mode .tt-val-studio{display:inline;}
   .phase-row > :nth-child(3)::before{content:'Designer';color:#c084fc;}
   .phase-row > :nth-child(4)::before{content:'PM';color:#4ade80;}
 
-  /* Tooltip: fixed bottom sheet on mobile */
+  /* Tooltip: centered modal on mobile */
   .tooltip{
     position:fixed;
-    bottom:12px;
-    left:10px;
-    right:10px;
-    top:auto;
+    top:50%;
+    left:12px;
+    right:12px;
+    bottom:auto;
+    transform:translateY(-50%);
     max-width:none;
     min-width:0;
-    border-radius:10px;
+    max-height:80vh;
+    overflow-y:auto;
+    border-radius:12px;
     z-index:9999;
   }
   .tooltip::after{display:none;}
@@ -177,9 +180,14 @@ body.studio-mode .tt-val-studio{display:inline;}
   .node-name{font-size:0.68rem;}
   .node-num{font-size:0.9rem;}
 }
+
+/* Backdrop overlay for mobile modal */
+#mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9998;}
 </style>
 </head>
 <body>
+
+<div id="mob-backdrop"></div>
 
 <div class="header">
   <h1>ESB Flow Chart</h1>
@@ -622,11 +630,12 @@ function setFlowMode(mode) {
 (function() {
   let hideTimer = null;
   let activeTooltip = null;
+  const backdrop = document.getElementById('mob-backdrop');
+  const isTouch = window.matchMedia('(hover: none)').matches;
 
   function hideAll() {
-    document.querySelectorAll('.tooltip').forEach(function(t) {
-      t.style.display = 'none';
-    });
+    document.querySelectorAll('.tooltip').forEach(function(t) { t.style.display = 'none'; });
+    if (backdrop) backdrop.style.display = 'none';
     activeTooltip = null;
   }
 
@@ -637,6 +646,7 @@ function setFlowMode(mode) {
     }
     tooltip.style.display = 'block';
     activeTooltip = tooltip;
+    if (isTouch && backdrop) backdrop.style.display = 'block';
   }
 
   function scheduleHide(tooltip) {
@@ -646,8 +656,6 @@ function setFlowMode(mode) {
     }, 300);
   }
 
-  const isTouch = window.matchMedia('(hover: none)').matches;
-
   document.querySelectorAll('.node').forEach(function(node) {
     const tooltip = node.querySelector('.tooltip');
     if (!tooltip) return;
@@ -655,12 +663,9 @@ function setFlowMode(mode) {
     if (isTouch) {
       node.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (activeTooltip === tooltip) {
-          hideAll();
-        } else {
-          showTooltip(tooltip);
-        }
+        if (activeTooltip === tooltip) { hideAll(); } else { showTooltip(tooltip); }
       });
+      tooltip.addEventListener('click', function(e) { e.stopPropagation(); });
     } else {
       node.addEventListener('mouseenter', function() { showTooltip(tooltip); });
       node.addEventListener('mouseleave', function() { scheduleHide(tooltip); });
@@ -669,9 +674,7 @@ function setFlowMode(mode) {
     }
   });
 
-  if (isTouch) {
-    document.addEventListener('click', function() { hideAll(); });
-  }
+  if (backdrop) backdrop.addEventListener('click', hideAll);
 })();
 </script>
 
